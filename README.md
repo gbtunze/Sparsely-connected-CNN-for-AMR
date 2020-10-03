@@ -1,0 +1,1 @@
+# SCGNet-Sparsely-connected-CNN-for-Efficient-AMR
