@@ -1,0 +1,203 @@
+% To run SCGNet architecture 
+% SCGNet_Architecture.m file should be executed at first, followed by
+% SCGNNet_training.m
+% The file SCGNet_Confusion should be executed at the end after Successful training process
+
+clear all
+close all
+clc
+
+% Build a layer graph variable 
+% It includes the layers of the network architecture
+
+lgraph = layerGraph();
+
+% Add the layers to the graph. 
+% Each branch is a linear array of layers.
+
+tempLayers = [
+    imageInputLayer([2 1024 1],"Name","Input_Data")
+    convolution2dLayer([3 3],32,"Name","conv_1_GFE","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_1_GFE")
+    groupedConvolution2dLayer([3 3],1,32,"Name","groupedconv_1_GFE","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_2_GFE")
+    convolution2dLayer([1 1],16,"Name","conv_2_GFE","Padding","same")
+    clippedReluLayer(3,"Name","clippedrelu_3_GFE")
+    convolution2dLayer([1 1],96,"Name","conv_3_GFE","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_4_GFE")
+    maxPooling2dLayer([2 2],"Name","maxpool_1_GFE","Padding","same","Stride",[1 2])
+    groupedConvolution2dLayer([3 3],1,96,"Name","groupedconv_2_GFE","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_5_GFE")
+    convolution2dLayer([1 1],24,"Name","conv_4_GFE","Padding","same","Stride",[1 2])
+    batchNormalizationLayer("Name","BN_1_GFE")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    convolution2dLayer([1 1],144,"Name","conv_1_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_1_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    groupedConvolution2dLayer([3 1],1,72,"Name","Depwisecov_2_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_3_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    groupedConvolution2dLayer([1 3],1,72,"Name","Depwisecov_1_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_2_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    depthConcatenationLayer(2,"Name","Concat_1_SAT")
+    convolution2dLayer([1 1],24,"Name","conv_2_SAT","Padding","same")
+    batchNormalizationLayer("Name","BN_1_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    additionLayer(2,"Name","add_1_SAT")
+    convolution2dLayer([1 1],128,"Name","conv_3_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_4_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    groupedConvolution2dLayer([3 1],1,32,"Name","Depwisecov_3_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_5_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    groupedConvolution2dLayer([1 3],1,32,"Name","Depwisecov_4_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_6_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    depthConcatenationLayer(2,"Name","Concat_2_SAT")
+    convolution2dLayer([1 1],32,"Name","conv_4_SAT","Padding","same","Stride",[1 2])
+    maxPooling2dLayer([2 2],"Name","maxpool_22_SAT","Padding","same","Stride",[1 2])];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    convolution2dLayer([1 1],96,"Name","conv_5_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_7_SAT")
+    groupedConvolution2dLayer([1 3],1,96,"Name","Depwisecov_5_SAT","Padding","same")
+    batchNormalizationLayer("Name","BN_2_SAT")
+    clippedReluLayer(6,"Name","clippedrelu_8_SAT")
+    groupedConvolution2dLayer([3 1],1,96,"Name","Depwisecov_6_SAT","Padding","same")
+    batchNormalizationLayer("Name","BN_3_SAT")
+    clippedReluLayer(6,"Name","clippedrelu_9_SAT")
+    convolution2dLayer([1 1],32,"Name","conv_6_SAT","Padding","same")
+    batchNormalizationLayer("Name","BN_4_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = additionLayer(2,"Name","add_2_SAT");
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    convolution2dLayer([1 1],128,"Name","conv_7_SAT","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_10_SAT")
+    groupedConvolution2dLayer([3 3],1,128,"Name","Depwisecov_7_SAT","Padding","same")
+    batchNormalizationLayer("Name","BN_5_SAT")
+    clippedReluLayer(3,"Name","clippedrelu_12_SAT")
+    convolution2dLayer([1 1],32,"Name","conv_8_SAT","Padding","same")
+    batchNormalizationLayer("Name","BN_6_SAT")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    additionLayer(2,"Name","add_3_SAT")
+    convolution2dLayer([1 1],128,"Name","conv_1_MultilayerTrans","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_1_MultilayerTrans")
+    groupedConvolution2dLayer([3 3],1,128,"Name","Depwisecov_7_MultilayerTrans","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_2_MultilayerTrans")
+    convolution2dLayer([1 1],16,"Name","conv_2_MultilayerTrans","Padding","same")
+    clippedReluLayer(6,"Name","clippedrelu_3_MultilayerTrans")
+    convolution2dLayer([1 1],64,"Name","conv_3_MultilayerTrans","Padding","same","Stride",[1 2])
+    maxPooling2dLayer([2 2],"Name","maxpool_1_MultilayerTrans","Padding","same","Stride",[1 2])
+    batchNormalizationLayer("Name","BN_1_MultilayerTrans")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = maxPooling2dLayer([2 2],"Name","maxpool_1_DFEP","Padding","same","Stride",[1 2]);
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    convolution2dLayer([1 1],32,"Name","conv_1_DFEP","Padding","same")
+    reluLayer("Name","relu_1_DFEP")
+    groupedConvolution2dLayer([3 3],1,32,"Name","groupedconv_1_DFEP","Padding","same")
+    reluLayer("Name","relu_2_DFEP")
+    convolution2dLayer([1 1],64,"Name","conv_2_DFEP","Padding","same","Stride",[1 2])
+    batchNormalizationLayer("Name","BN_1_DFEP")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    additionLayer(2,"Name","add_1_DFEP")
+    reluLayer("Name","relu_3_DFEP")
+    convolution2dLayer([1 1],128,"Name","conv_3_DFEP","Padding","same","Stride",[1 2])
+    batchNormalizationLayer("Name","BN_2_DFEP")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = maxPooling2dLayer([2 2],"Name","maxpool_2_DFEP","Padding","same","Stride",[1 2]);
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    convolution2dLayer([1 1],64,"Name","conv_4_DFEP","Padding","same")
+    reluLayer("Name","relu_4_DFEP")
+    groupedConvolution2dLayer([3 3],2,32,"Name","groupedconv_2_DFEP","Padding","same")
+    reluLayer("Name","relu_5_DFEP")
+    convolution2dLayer([1 1],128,"Name","conv_5_DFEP","Padding","same","Stride",[1 2])
+    batchNormalizationLayer("Name","BN_3")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = additionLayer(2,"Name","add_2_DFEP");
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    convolution2dLayer([1 1],64,"Name","conv_6_DFEP","Padding","same")
+    reluLayer("Name","relu_6_DFEP")
+    groupedConvolution2dLayer([3 3],2,32,"Name","groupedconv_3","Padding","same")
+    reluLayer("Name","relu_7")
+    convolution2dLayer([1 1],128,"Name","conv_7_DFEP","Padding","same")
+    batchNormalizationLayer("Name","BN_4")];
+lgraph = addLayers(lgraph,tempLayers);
+
+tempLayers = [
+    additionLayer(2,"Name","add_3")
+    averagePooling2dLayer([2 4],"Name","Avgpool","Padding","same")
+    fullyConnectedLayer(24,"Name","fc")
+    softmaxLayer("Name","softmax")
+    classificationLayer("Name","Output")];
+lgraph = addLayers(lgraph,tempLayers);
+
+% Connect all the branches of the network 
+% to create the overall SCGNet architectural graph.
+
+lgraph = connectLayers(lgraph,"BN_1_GFE","conv_1_SAT");
+lgraph = connectLayers(lgraph,"BN_1_GFE","add_1_SAT/in2");
+lgraph = connectLayers(lgraph,"clippedrelu_1_SAT","Depwisecov_2_SAT");
+lgraph = connectLayers(lgraph,"clippedrelu_1_SAT","Depwisecov_1_SAT");
+lgraph = connectLayers(lgraph,"clippedrelu_2_SAT","Concat_1_SAT/in2");
+lgraph = connectLayers(lgraph,"clippedrelu_3_SAT","Concat_1_SAT/in1");
+lgraph = connectLayers(lgraph,"BN_1_SAT","add_1_SAT/in1");
+lgraph = connectLayers(lgraph,"clippedrelu_4_SAT","Depwisecov_3_SAT");
+lgraph = connectLayers(lgraph,"clippedrelu_4_SAT","Depwisecov_4_SAT");
+lgraph = connectLayers(lgraph,"clippedrelu_6_SAT","Concat_2_SAT/in2");
+lgraph = connectLayers(lgraph,"clippedrelu_5_SAT","Concat_2_SAT/in1");
+lgraph = connectLayers(lgraph,"maxpool_22_SAT","conv_5_SAT");
+lgraph = connectLayers(lgraph,"maxpool_22_SAT","add_2_SAT/in2");
+lgraph = connectLayers(lgraph,"BN_4_SAT","add_2_SAT/in1");
+lgraph = connectLayers(lgraph,"add_2_SAT","conv_7_SAT");
+lgraph = connectLayers(lgraph,"add_2_SAT","add_3_SAT/in2");
+lgraph = connectLayers(lgraph,"BN_6_SAT","add_3_SAT/in1");
+lgraph = connectLayers(lgraph,"BN_1_MultilayerTrans","maxpool_1_DFEP");
+lgraph = connectLayers(lgraph,"BN_1_MultilayerTrans","conv_1_DFEP");
+lgraph = connectLayers(lgraph,"maxpool_1_DFEP","add_1_DFEP/in2");
+lgraph = connectLayers(lgraph,"BN_1_DFEP","add_1_DFEP/in1");
+lgraph = connectLayers(lgraph,"BN_2_DFEP","maxpool_2_DFEP");
+lgraph = connectLayers(lgraph,"BN_2_DFEP","conv_4_DFEP");
+lgraph = connectLayers(lgraph,"maxpool_2_DFEP","add_2_DFEP/in2");
+lgraph = connectLayers(lgraph,"BN_3","add_2_DFEP/in1");
+lgraph = connectLayers(lgraph,"add_2_DFEP","conv_6_DFEP");
+lgraph = connectLayers(lgraph,"add_2_DFEP","add_3/in2");
+lgraph = connectLayers(lgraph,"BN_4","add_3/in1");
+
+%Clean Up Helper Variable
+clear tempLayers;
+
+
